@@ -1,7 +1,8 @@
 package com.horizon.labspring.service;
 
 import com.horizon.labspring.model.Book;
-import com.horizon.labspring.repository.BookRepository;
+
+import com.horizon.labspring.repository.BookReposotory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -9,20 +10,19 @@ import java.util.List;
 @Service
 public class BookService {
 
-    private final BookRepository bookRepository;
+    private final BookReposotory bookRepository;
 
 
-    public BookService(BookRepository bookRepository) {
+    public BookService(BookReposotory bookRepository) {
         this.bookRepository = bookRepository;
     }
 
 
     public void SaveBook(Book book) {
-        boolean exists = bookRepository.getAll().stream()
-                .anyMatch(b -> b.getISBN().equalsIgnoreCase(book.getISBN()));
-
+        boolean exists = bookRepository.existsByTitle(book.getTitle());
+       System.out.println(book);
         if (!exists) {
-            bookRepository.add(book);
+            bookRepository.save(book);
             System.out.println("Book added: " + book.getTitle());
         } else {
             System.out.println("Book already exists: " + book.getTitle());
@@ -32,7 +32,7 @@ public class BookService {
 
     public int Inventory(String category) {
         int total = 0;
-        for (Book b : bookRepository.getAll()) {
+        for (Book b : bookRepository.findAll()) {
             if (b.getCategory() != null && b.getCategory().equalsIgnoreCase(category)) {
                 total += b.getQuantity();
             }
@@ -42,7 +42,7 @@ public class BookService {
 
 
     public void update() {
-        List<Book> books = bookRepository.getAll();
+        List<Book> books = bookRepository.findAll();
         for (Book b : books) {
             b.setPrice(b.getPrice() * 1.10); // +10%
         }
@@ -51,7 +51,10 @@ public class BookService {
 
 
     public void deleteBook(String isbn) {
-        bookRepository.Delete(isbn);
-        System.out.println("Book deleted with ISBN: " + isbn);
+        for (Book b : bookRepository.findAll()) {
+            if(b.getIsbn().equalsIgnoreCase(isbn)) {
+                bookRepository.delete(b);
+            }
+            }
     }
 }
